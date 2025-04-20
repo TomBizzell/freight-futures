@@ -19,53 +19,46 @@ contract FreightPredictor {
     
     constructor(uint256 _end) {
         owner = msg.sender;
-        end = block.timestamp + _end;
+        end = _end;
     }
     
     function bet(bool side) public payable {
-        require(!done && block.timestamp < end && msg.value > 0, "Invalid bet");
+        require(!done && block.timestamp < end && msg.value > 0);
         
         bets[msg.sender] += msg.value;
         sides[msg.sender] = side;
         
-        if (side) {
-            yes += msg.value;
-        } else {
-            no += msg.value;
-        }
+        if (side) yes += msg.value;
+        else no += msg.value;
         
         emit Bet(msg.sender, side, msg.value);
     }
     
     function resolve(bool res) public {
-        require(msg.sender == owner && !done && block.timestamp >= end, "Not allowed");
+        require(msg.sender == owner && !done && block.timestamp >= end);
         done = true;
         result = res;
         emit End(res);
     }
     
     function claim() public {
-        require(done, "Not ended");
-        require(bets[msg.sender] > 0, "No bets");
+        require(done && bets[msg.sender] > 0 && sides[msg.sender] == result);
         
-        bool userSide = sides[msg.sender];
-        require(userSide == result, "Wrong side");
-        
-        uint256 amount = bets[msg.sender];
+        uint256 amt = bets[msg.sender];
         uint256 pool = yes + no;
-        uint256 winPool = result ? yes : no;
+        uint256 win = result ? yes : no;
         
         bets[msg.sender] = 0;
         
-        uint256 payout = pool * amount / winPool;
-        (bool sent,) = msg.sender.call{value: payout}("");
-        require(sent, "Failed");
+        uint256 pay = pool * amt / win;
+        (bool sent,) = msg.sender.call{value: pay}("");
+        require(sent);
     }
     
     function stats() public view returns (uint256, uint256, uint256, uint256) {
-        uint256 tot = yes + no;
-        uint256 yesP = tot > 0 ? yes * 100 / tot : 0;
-        uint256 noP = tot > 0 ? no * 100 / tot : 0;
-        return (yes, no, yesP, noP);
+        uint256 t = yes + no;
+        uint256 yp = t > 0 ? yes * 100 / t : 0;
+        uint256 np = t > 0 ? no * 100 / t : 0;
+        return (yes, no, yp, np);
     }
 }

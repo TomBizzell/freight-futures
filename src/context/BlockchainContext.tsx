@@ -29,26 +29,20 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [marketStats, setMarketStats] = useState(null);
   const [userStats, setUserStats] = useState(null);
 
-  // Check wallet connection on load
   useEffect(() => {
-    const checkConnection = async () => {
-      const connectedAccount = await isWalletConnected();
-      if (connectedAccount) {
-        setAccount(connectedAccount);
-      }
+    const check = async () => {
+      const conn = await isWalletConnected();
+      if (conn) setAccount(conn);
     };
-    
-    checkConnection();
+    check();
   }, []);
 
-  // Listen for account changes
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts: string[]) => {
         setAccount(accounts.length > 0 ? accounts[0] : null);
       });
     }
-    
     return () => {
       if (window.ethereum) {
         window.ethereum.removeListener('accountsChanged', () => {});
@@ -56,7 +50,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Get market stats when account changes
   useEffect(() => {
     if (account) {
       refreshMarketStats();
@@ -66,26 +59,26 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const connectToWallet = async () => {
     try {
       setConnecting(true);
-      const connectedAccount = await connectWallet();
+      const conn = await connectWallet();
       
-      if (connectedAccount) {
-        setAccount(connectedAccount);
+      if (conn) {
+        setAccount(conn);
         toast({
-          title: "Wallet Connected",
-          description: `Connected to ${connectedAccount.substring(0, 6)}...${connectedAccount.substring(38)}`,
+          title: "Connected",
+          description: `Wallet ${conn.substring(0, 6)}...${conn.substring(38)}`,
         });
       } else {
         toast({
-          title: "Connection Failed",
-          description: "Could not connect to wallet",
+          title: "Failed",
+          description: "Could not connect",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Failed to connect wallet:", error);
+      console.error("Connect error:", error);
       toast({
-        title: "Connection Error",
-        description: "An error occurred while connecting to your wallet",
+        title: "Error",
+        description: "Connection error",
         variant: "destructive",
       });
     } finally {
@@ -99,11 +92,11 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setMarketStats(stats);
       
       if (account) {
-        const userBets = await getUserBets(account);
-        setUserStats(userBets);
+        const bets = await getUserBets(account);
+        setUserStats(bets);
       }
     } catch (error) {
-      console.error("Failed to refresh market stats:", error);
+      console.error("Stats error:", error);
     }
   };
 
@@ -126,7 +119,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
 export const useBlockchain = () => {
   const context = useContext(BlockchainContext);
   if (context === undefined) {
-    throw new Error('useBlockchain must be used within a BlockchainProvider');
+    throw new Error('useBlockchain must be used within BlockchainProvider');
   }
   return context;
 };

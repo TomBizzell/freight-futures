@@ -9,12 +9,12 @@ type PredictionSide = 'yes' | 'no';
 
 export const connectWallet = async (): Promise<string | null> => {
   try {
-    if (!window.ethereum) throw new Error("MetaMask not installed");
+    if (!window.ethereum) throw new Error("No wallet");
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    await switchToCorrectChain();
+    await switchChain();
     return accounts[0];
   } catch (error) {
-    console.error("Failed to connect to wallet:", error);
+    console.error("Wallet error:", error);
     return null;
   }
 };
@@ -25,12 +25,12 @@ export const isWalletConnected = async (): Promise<string | null> => {
     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
     return accounts.length > 0 ? accounts[0] : null;
   } catch (error) {
-    console.error("Failed to check wallet connection:", error);
+    console.error("Check error:", error);
     return null;
   }
 };
 
-const switchToCorrectChain = async (): Promise<boolean> => {
+const switchChain = async (): Promise<boolean> => {
   try {
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
@@ -38,12 +38,12 @@ const switchToCorrectChain = async (): Promise<boolean> => {
     });
     return true;
   } catch (error) {
-    console.error("Failed to switch network:", error);
+    console.error("Network error:", error);
     return false;
   }
 };
 
-const getContractInstance = () => {
+const getContract = () => {
   if (!window.ethereum) return null;
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -52,7 +52,7 @@ const getContractInstance = () => {
 
 export const makePrediction = async (side: PredictionSide, amount: number): Promise<boolean> => {
   try {
-    const contract = getContractInstance();
+    const contract = getContract();
     if (!contract) return false;
     const tx = await contract.bet(side === 'yes', {
       value: ethers.utils.parseEther(amount.toString())
@@ -60,14 +60,14 @@ export const makePrediction = async (side: PredictionSide, amount: number): Prom
     await tx.wait();
     return true;
   } catch (error) {
-    console.error("Failed to make prediction:", error);
+    console.error("Bet error:", error);
     return false;
   }
 };
 
 export const getMarketStats = async () => {
   try {
-    const contract = getContractInstance();
+    const contract = getContract();
     if (!contract) return null;
     const stats = await contract.stats();
     return {
@@ -77,14 +77,14 @@ export const getMarketStats = async () => {
       noPercentage: stats[3].toNumber()
     };
   } catch (error) {
-    console.error("Failed to get market stats:", error);
+    console.error("Stats error:", error);
     return null;
   }
 };
 
 export const getUserBets = async (address: string) => {
   try {
-    const contract = getContractInstance();
+    const contract = getContract();
     if (!contract) return null;
     
     const betAmount = await contract.bets(address);
@@ -95,20 +95,20 @@ export const getUserBets = async (address: string) => {
       noPredictions: !betSide ? ethers.utils.formatEther(betAmount) : "0"
     };
   } catch (error) {
-    console.error("Failed to get user bets:", error);
+    console.error("User bets error:", error);
     return null;
   }
 };
 
 export const claimWinnings = async (): Promise<boolean> => {
   try {
-    const contract = getContractInstance();
+    const contract = getContract();
     if (!contract) return false;
     const tx = await contract.claim();
     await tx.wait();
     return true;
   } catch (error) {
-    console.error("Failed to claim winnings:", error);
+    console.error("Claim error:", error);
     return false;
   }
 };
