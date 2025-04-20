@@ -2,20 +2,14 @@
 import { ethers } from 'ethers';
 import FreightPredictorABI from '../contracts/FreightPredictorABI.json';
 
-// Constants
-const CONTRACT_ADDRESS = "0x123..."; // Replace with actual deployed contract address
-const CHAIN_ID = "0x1"; // Ethereum Mainnet, change as needed
+const CONTRACT_ADDRESS = "0x123...";
+const CHAIN_ID = "0x1";
 
-// Type definitions
 type PredictionSide = 'yes' | 'no';
 
-// Connect to MetaMask wallet
 export const connectWallet = async (): Promise<string | null> => {
   try {
-    if (!window.ethereum) {
-      throw new Error("MetaMask not installed");
-    }
-    
+    if (!window.ethereum) throw new Error("MetaMask not installed");
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     await switchToCorrectChain();
     return accounts[0];
@@ -25,7 +19,6 @@ export const connectWallet = async (): Promise<string | null> => {
   }
 };
 
-// Check if wallet is connected
 export const isWalletConnected = async (): Promise<string | null> => {
   try {
     if (!window.ethereum) return null;
@@ -37,8 +30,7 @@ export const isWalletConnected = async (): Promise<string | null> => {
   }
 };
 
-// Switch to the correct blockchain network
-export const switchToCorrectChain = async (): Promise<boolean> => {
+const switchToCorrectChain = async (): Promise<boolean> => {
   try {
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
@@ -51,25 +43,20 @@ export const switchToCorrectChain = async (): Promise<boolean> => {
   }
 };
 
-// Get contract instance
-export const getContractInstance = () => {
+const getContractInstance = () => {
   if (!window.ethereum) return null;
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   return new ethers.Contract(CONTRACT_ADDRESS, FreightPredictorABI, signer);
 };
 
-// Make a prediction (bet)
 export const makePrediction = async (side: PredictionSide, amount: number): Promise<boolean> => {
   try {
     const contract = getContractInstance();
     if (!contract) return false;
-    
-    const amountInWei = ethers.utils.parseEther(amount.toString());
-    const tx = await contract.makePrediction(side === 'yes', {
-      value: amountInWei
+    const tx = await contract.bet(side === 'yes', {
+      value: ethers.utils.parseEther(amount.toString())
     });
-    
     await tx.wait();
     return true;
   } catch (error) {
@@ -78,13 +65,11 @@ export const makePrediction = async (side: PredictionSide, amount: number): Prom
   }
 };
 
-// Get market stats
 export const getMarketStats = async () => {
   try {
     const contract = getContractInstance();
     if (!contract) return null;
-    
-    const stats = await contract.getMarketStats();
+    const stats = await contract.stats();
     return {
       yesPredictions: ethers.utils.formatEther(stats[0]),
       noPredictions: ethers.utils.formatEther(stats[1]),
@@ -94,35 +79,5 @@ export const getMarketStats = async () => {
   } catch (error) {
     console.error("Failed to get market stats:", error);
     return null;
-  }
-};
-
-// Calculate and claim rewards
-export const calculateReward = async (): Promise<boolean> => {
-  try {
-    const contract = getContractInstance();
-    if (!contract) return false;
-    
-    const tx = await contract.calculateReward();
-    await tx.wait();
-    return true;
-  } catch (error) {
-    console.error("Failed to calculate rewards:", error);
-    return false;
-  }
-};
-
-// Withdraw rewards
-export const withdrawReward = async (): Promise<boolean> => {
-  try {
-    const contract = getContractInstance();
-    if (!contract) return false;
-    
-    const tx = await contract.withdrawReward();
-    await tx.wait();
-    return true;
-  } catch (error) {
-    console.error("Failed to withdraw rewards:", error);
-    return false;
   }
 };
