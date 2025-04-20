@@ -11,7 +11,7 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                <span className="text-ocean-800">Trade</span> the Future of{" "}
+                <span className="text-ocean-800">Trade and Hedge</span> the Future of{" "}
                 <span className="text-freight-600">Freight Prices</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl">
