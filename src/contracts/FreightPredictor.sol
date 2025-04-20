@@ -27,11 +27,17 @@ contract FreightPredictor {
     // Market creator and fee percentage
     address public creator;
     uint256 public feePercentage = 2; // 2% fee
+
+    // Pending withdrawals
+    mapping(address => uint256) public pendingWithdrawals;
+    uint256 public creatorFees;
     
     // Events
     event PredictionMade(address user, bool prediction, uint256 amount);
+    event RewardCalculated(address user, uint256 amount);
     event RewardClaimed(address user, uint256 amount);
     event MarketResolved(bool result);
+    event FeesWithdrawn(address creator, uint256 amount);
     
     constructor(uint256 _marketDuration) {
         creator = msg.sender;
@@ -72,13 +78,16 @@ contract FreightPredictor {
         marketResolved = true;
         marketResult = result;
         
+        // Calculate creator fees
+        creatorFees = ((yesPool + noPool) * feePercentage) / 100;
+        
         emit MarketResolved(result);
     }
     
     /**
-     * @dev Claim rewards after market is resolved
+     * @dev Calculate rewards and add them to pending withdrawals
      */
-    function claimReward() public {
+    function calculateReward() public {
         require(marketResolved, "Market not yet resolved");
         
         uint256 reward = 0;
@@ -99,10 +108,27 @@ contract FreightPredictor {
             }
         }
         
-        require(reward > 0, "No rewards to claim");
+        if (reward > 0) {
+            pendingWithdrawals[msg.sender] += reward;
+            emit RewardCalculated(msg.sender, reward);
+        }
+    }
+    
+    /**
+     * @dev Withdraw available rewards
+     */
+    function withdrawReward() public {
+        uint256 amount = pendingWithdrawals[msg.sender];
+        require(amount > 0, "No rewards to withdraw");
         
-        payable(msg.sender).transfer(reward);
-        emit RewardClaimed(msg.sender, reward);
+        // Set pending withdrawal to 0 before sending to prevent re-entrancy attacks
+        pendingWithdrawals[msg.sender] = 0;
+        
+        // Use call to send Ether (safer than transfer or send)
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        
+        emit RewardClaimed(msg.sender, amount);
     }
     
     /**
@@ -141,8 +167,22 @@ contract FreightPredictor {
     function withdrawFees() public {
         require(msg.sender == creator, "Only creator can withdraw fees");
         require(marketResolved, "Market not yet resolved");
+        require(creatorFees > 0, "No fees to withdraw");
         
-        uint256 fees = ((yesPool + noPool) * feePercentage) / 100;
-        payable(creator).transfer(fees);
+        uint256 amount = creatorFees;
+        creatorFees = 0;
+        
+        // Use call to send Ether (safer than transfer or send)
+        (bool success, ) = creator.call{value: amount}("");
+        require(success, "Transfer failed");
+        
+        emit FeesWithdrawn(creator, amount);
+    }
+    
+    /**
+     * @dev Get pending withdrawal amount for a user
+     */
+    function getPendingWithdrawal(address user) public view returns (uint256) {
+        return pendingWithdrawals[user];
     }
 }
