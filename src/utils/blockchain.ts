@@ -81,3 +81,34 @@ export const getMarketStats = async () => {
     return null;
   }
 };
+
+export const getUserBets = async (address: string) => {
+  try {
+    const contract = getContractInstance();
+    if (!contract) return null;
+    
+    const betAmount = await contract.bets(address);
+    const betSide = await contract.sides(address);
+    
+    return {
+      yesPredictions: betSide ? ethers.utils.formatEther(betAmount) : "0",
+      noPredictions: !betSide ? ethers.utils.formatEther(betAmount) : "0"
+    };
+  } catch (error) {
+    console.error("Failed to get user bets:", error);
+    return null;
+  }
+};
+
+export const claimWinnings = async (): Promise<boolean> => {
+  try {
+    const contract = getContractInstance();
+    if (!contract) return false;
+    const tx = await contract.claim();
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error("Failed to claim winnings:", error);
+    return false;
+  }
+};

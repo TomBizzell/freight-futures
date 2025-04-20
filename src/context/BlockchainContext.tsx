@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { connectWallet, isWalletConnected, getMarketStats } from '../utils/blockchain';
+import { connectWallet, isWalletConnected, getMarketStats, getUserBets } from '../utils/blockchain';
 import { useToast } from '@/hooks/use-toast';
 
 type BlockchainContextType = {
@@ -99,9 +99,8 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setMarketStats(stats);
       
       if (account) {
-        // Since getUserPredictions was removed, we'll now calculate user stats from contract directly
-        // For now, just setting to null or we could implement a simpler version
-        setUserStats(null);
+        const userBets = await getUserBets(account);
+        setUserStats(userBets);
       }
     } catch (error) {
       console.error("Failed to refresh market stats:", error);
