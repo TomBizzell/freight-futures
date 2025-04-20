@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -65,15 +64,6 @@ const Market = () => {
   };
   
   const handlePlaceBet = async () => {
-    if (!account) {
-      toast({
-        title: "Wallet Required",
-        description: "Please connect your wallet first",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     if (!betSide) {
       toast({
         title: "Error",
@@ -83,25 +73,14 @@ const Market = () => {
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      const success = await makePrediction(betSide);
-      
-      if (success) {
-        toast({
-          title: "Bet Placed!",
-          description: `You bet ${betAmount} ETH on ${betSide.toUpperCase()}`
-        });
-        
-        // Refresh market stats after bet
-        await refreshMarketStats();
-      } else {
-        toast({
-          title: "Transaction Failed",
-          description: "Failed to place bet. Please try again.",
-          variant: "destructive"
-        });
-      }
+      await makePrediction(betSide);
+      toast({
+        title: "Demo Bet Placed!",
+        description: `You bet ${betAmount} ETH on ${betSide.toUpperCase()} (Demo Mode)`
+      });
     } catch (error) {
       console.error("Error placing bet:", error);
       toast({
@@ -261,33 +240,6 @@ const Market = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <Button 
-                    className="h-20"
-                    variant={betSide === "yes" ? "default" : "outline"}
-                    onClick={() => handleBet("yes")}
-                    disabled={!account || isSubmitting}
-                  >
-                    <div className="flex flex-col items-center">
-                      <ArrowUp className="h-5 w-5 mb-1" />
-                      <span className="font-bold">YES</span>
-                      <span className="text-xs">{marketData.yesPrice.toFixed(2)}</span>
-                    </div>
-                  </Button>
-                  <Button 
-                    className="h-20"
-                    variant={betSide === "no" ? "default" : "outline"}
-                    onClick={() => handleBet("no")}
-                    disabled={!account || isSubmitting}
-                  >
-                    <div className="flex flex-col items-center">
-                      <ArrowDown className="h-5 w-5 mb-1" />
-                      <span className="font-bold">NO</span>
-                      <span className="text-xs">{marketData.noPrice.toFixed(2)}</span>
-                    </div>
-                  </Button>
-                </div>
-                
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">Amount to bet (ETH)</label>
@@ -298,7 +250,6 @@ const Market = () => {
                         value={betAmount}
                         onChange={handleInputChange}
                         className="flex-1"
-                        disabled={!account || isSubmitting}
                         min={0.001}
                         step={0.001}
                       />
@@ -308,10 +259,10 @@ const Market = () => {
                   <div className="pt-2">
                     <Slider
                       value={sliderValue}
+                      onValueChange={handleSliderChange}
                       max={1}
                       step={0.01}
-                      onValueChange={handleSliderChange}
-                      disabled={!account || isSubmitting}
+                      className="cursor-pointer"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
                       <span>0.00</span>
@@ -335,12 +286,35 @@ const Market = () => {
                 </div>
               </CardContent>
               <CardFooter>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <Button 
+                    className={`h-20 transition-all ${betSide === "yes" ? "bg-bet-yes" : ""}`}
+                    variant={betSide === "yes" ? "default" : "outline"}
+                    onClick={() => handleBet("yes")}
+                  >
+                    <div className="flex flex-col items-center">
+                      <ArrowUp className="h-5 w-5 mb-1" />
+                      <span className="font-bold">YES</span>
+                    </div>
+                  </Button>
+                  <Button 
+                    className={`h-20 transition-all ${betSide === "no" ? "bg-bet-no" : ""}`}
+                    variant={betSide === "no" ? "default" : "outline"}
+                    onClick={() => handleBet("no")}
+                  >
+                    <div className="flex flex-col items-center">
+                      <ArrowDown className="h-5 w-5 mb-1" />
+                      <span className="font-bold">NO</span>
+                    </div>
+                  </Button>
+                </div>
+                
                 <Button 
-                  className="w-full" 
+                  className="w-full"
                   onClick={handlePlaceBet}
-                  disabled={!account || !betSide || betAmount <= 0 || isSubmitting}
+                  disabled={!betSide || betAmount <= 0 || isSubmitting}
                 >
-                  {!account ? "Connect Wallet" : isSubmitting ? "Processing..." : "Place Bet"}
+                  {isSubmitting ? "Processing..." : "Place Bet"}
                 </Button>
               </CardFooter>
             </Card>
