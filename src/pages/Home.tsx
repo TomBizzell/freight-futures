@@ -1,12 +1,9 @@
-
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/layout/PageLayout";
-
 const Home = () => {
-  return (
-    <PageLayout>
+  return <PageLayout>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="wave-bg absolute inset-0 z-0"></div>
@@ -14,7 +11,7 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                <span className="text-ocean-800">Predict</span> the Future of{" "}
+                <span className="text-ocean-800">Trade</span> the Future of{" "}
                 <span className="text-freight-600">Freight Prices</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl">
@@ -134,8 +131,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </PageLayout>
-  );
+    </PageLayout>;
 };
-
 export default Home;
