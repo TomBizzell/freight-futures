@@ -85,11 +85,10 @@ contract FreightPredictor {
     }
     
     /**
-     * @dev Calculate rewards and add them to pending withdrawals
+     * @dev Calculate user's reward based on prediction accuracy
      */
     function calculateReward() public {
         require(marketResolved, "Market not yet resolved");
-        
         uint256 reward = 0;
         
         if (marketResult) {
@@ -121,10 +120,8 @@ contract FreightPredictor {
         uint256 amount = pendingWithdrawals[msg.sender];
         require(amount > 0, "No rewards to withdraw");
         
-        // Set pending withdrawal to 0 before sending to prevent re-entrancy attacks
         pendingWithdrawals[msg.sender] = 0;
         
-        // Use call to send Ether (safer than transfer or send)
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed");
         
@@ -133,8 +130,6 @@ contract FreightPredictor {
     
     /**
      * @dev Get user predictions
-     * @return yesAmount user's yes predictions
-     * @return noAmount user's no predictions
      */
     function getUserPredictions(address user) public view returns (uint256 yesAmount, uint256 noAmount) {
         return (userYesPredictions[user], userNoPredictions[user]);
@@ -142,16 +137,9 @@ contract FreightPredictor {
     
     /**
      * @dev Get current market stats
-     * @return _yesPredictions total yes predictions
-     * @return _noPredictions total no predictions
-     * @return _yesPercentage percentage of yes predictions
-     * @return _noPercentage percentage of no predictions
      */
     function getMarketStats() public view returns (
-        uint256 _yesPredictions, 
-        uint256 _noPredictions,
-        uint256 _yesPercentage,
-        uint256 _noPercentage
+        uint256, uint256, uint256, uint256
     ) {
         uint256 totalPredictions = yesPredictions + noPredictions;
         
@@ -172,7 +160,6 @@ contract FreightPredictor {
         uint256 amount = creatorFees;
         creatorFees = 0;
         
-        // Use call to send Ether (safer than transfer or send)
         (bool success, ) = creator.call{value: amount}("");
         require(success, "Transfer failed");
         
