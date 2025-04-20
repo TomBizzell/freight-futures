@@ -3,62 +3,33 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract FreightPredictor {
-    bool public done;
-    bool public result;
-    uint256 public end;
-    
-    uint256 public yes;
-    uint256 public no;
-    
-    mapping(address => uint256) public bets;
-    mapping(address => bool) public sides;
-    address public owner;
-    
-    event Bet(address user, bool side, uint256 amt);
-    event End(bool res);
-    
-    constructor(uint256 _end) {
-        owner = msg.sender;
-        end = _end;
+    struct Vote {
+        uint256 yesCount;
+        uint256 noCount;
     }
-    
-    function bet(bool side) public payable {
-        require(!done && block.timestamp < end && msg.value > 0);
+
+    Vote public currentVote;
+    mapping(address => bool) public hasVoted;
+
+    event VoteCast(address voter, bool voteType);
+
+    function vote(bool voteYes) public {
+        require(!hasVoted[msg.sender], "Already voted");
         
-        bets[msg.sender] += msg.value;
-        sides[msg.sender] = side;
+        hasVoted[msg.sender] = true;
+        if (voteYes) {
+            currentVote.yesCount += 1;
+        } else {
+            currentVote.noCount += 1;
+        }
         
-        if (side) yes += msg.value;
-        else no += msg.value;
-        
-        emit Bet(msg.sender, side, msg.value);
+        emit VoteCast(msg.sender, voteYes);
     }
-    
-    function resolve(bool res) public {
-        require(msg.sender == owner && !done && block.timestamp >= end);
-        done = true;
-        result = res;
-        emit End(res);
-    }
-    
-    function claim() public {
-        require(done && bets[msg.sender] > 0 && sides[msg.sender] == result);
-        
-        uint256 amt = bets[msg.sender];
-        uint256 pool = yes + no;
-        uint256 win = result ? yes : no;
-        
-        bets[msg.sender] = 0;
-        
-        uint256 pay = pool * amt / win;
-        (bool sent,) = msg.sender.call{value: pay}("");
-        require(sent);
-    }
-    
-    function stats() public view returns (uint256, uint256, uint256, uint256) {
-        uint256 t = yes + no;
-        uint256 yp = t > 0 ? yes * 100 / t : 0;
-        uint256 np = t > 0 ? no * 100 / t : 0;
-        return (yes, no, yp, np);
+
+    function getVoteStats() public view returns (uint256, uint256, uint256, uint256) {
+        uint256 total = currentVote.yesCount + currentVote.noCount;
+        uint256 yesPercent = total > 0 ? (currentVote.yesCount * 100) / total : 0;
+        uint256 noPercent = total > 0 ? (currentVote.noCount * 100) / total : 0;
+        return (currentVote.yesCount, currentVote.noCount, yesPercent, noPercent);
     }
 }
