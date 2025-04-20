@@ -16,12 +16,8 @@ export const connectWallet = async (): Promise<string | null> => {
       throw new Error("MetaMask not installed");
     }
     
-    // Request account access
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    
-    // Check if we're on the right network
     await switchToCorrectChain();
-    
     return accounts[0];
   } catch (error) {
     console.error("Failed to connect to wallet:", error);
@@ -32,10 +28,7 @@ export const connectWallet = async (): Promise<string | null> => {
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<string | null> => {
   try {
-    if (!window.ethereum) {
-      return null;
-    }
-    
+    if (!window.ethereum) return null;
     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
     return accounts.length > 0 ? accounts[0] : null;
   } catch (error) {
@@ -52,7 +45,7 @@ export const switchToCorrectChain = async (): Promise<boolean> => {
       params: [{ chainId: CHAIN_ID }],
     });
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to switch network:", error);
     return false;
   }
@@ -61,7 +54,6 @@ export const switchToCorrectChain = async (): Promise<boolean> => {
 // Get contract instance
 export const getContractInstance = () => {
   if (!window.ethereum) return null;
-  
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   return new ethers.Contract(CONTRACT_ADDRESS, FreightPredictorABI, signer);
@@ -94,10 +86,10 @@ export const getMarketStats = async () => {
     
     const stats = await contract.getMarketStats();
     return {
-      yesPredictions: ethers.utils.formatEther(stats._yesPredictions),
-      noPredictions: ethers.utils.formatEther(stats._noPredictions),
-      yesPercentage: stats._yesPercentage.toNumber(),
-      noPercentage: stats._noPercentage.toNumber()
+      yesPredictions: ethers.utils.formatEther(stats[0]),
+      noPredictions: ethers.utils.formatEther(stats[1]),
+      yesPercentage: stats[2].toNumber(),
+      noPercentage: stats[3].toNumber()
     };
   } catch (error) {
     console.error("Failed to get market stats:", error);
@@ -105,34 +97,32 @@ export const getMarketStats = async () => {
   }
 };
 
-// Get user predictions
-export const getUserPredictions = async (address: string) => {
-  try {
-    const contract = getContractInstance();
-    if (!contract) return null;
-    
-    const predictions = await contract.getUserPredictions(address);
-    return {
-      yesPredictions: ethers.utils.formatEther(predictions.yesAmount),
-      noPredictions: ethers.utils.formatEther(predictions.noAmount)
-    };
-  } catch (error) {
-    console.error("Failed to get user predictions:", error);
-    return null;
-  }
-};
-
-// Claim rewards
-export const claimRewards = async (): Promise<boolean> => {
+// Calculate and claim rewards
+export const calculateReward = async (): Promise<boolean> => {
   try {
     const contract = getContractInstance();
     if (!contract) return false;
     
-    const tx = await contract.claimReward();
+    const tx = await contract.calculateReward();
     await tx.wait();
     return true;
   } catch (error) {
-    console.error("Failed to claim rewards:", error);
+    console.error("Failed to calculate rewards:", error);
+    return false;
+  }
+};
+
+// Withdraw rewards
+export const withdrawReward = async (): Promise<boolean> => {
+  try {
+    const contract = getContractInstance();
+    if (!contract) return false;
+    
+    const tx = await contract.withdrawReward();
+    await tx.wait();
+    return true;
+  } catch (error) {
+    console.error("Failed to withdraw rewards:", error);
     return false;
   }
 };

@@ -50,27 +50,8 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "RewardClaimed",
-    "type": "event"
-  },
-  {
     "inputs": [],
-    "name": "claimReward",
+    "name": "calculateReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -107,46 +88,22 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "_yesPredictions",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_noPredictions",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_yesPercentage",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_noPercentage",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "getUserPredictions",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "yesAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "noAmount",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -219,8 +176,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "noPool",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pendingWithdrawals",
     "outputs": [
       {
         "internalType": "uint256",
@@ -284,7 +247,7 @@
   },
   {
     "inputs": [],
-    "name": "withdrawFees",
+    "name": "withdrawReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -292,19 +255,6 @@
   {
     "inputs": [],
     "name": "yesPredictions",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "yesPool",
     "outputs": [
       {
         "internalType": "uint256",
