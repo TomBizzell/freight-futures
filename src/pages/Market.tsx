@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -19,7 +18,6 @@ import PageLayout from "@/components/layout/PageLayout";
 import { useBlockchain } from "@/context/BlockchainContext";
 import { makePrediction } from "@/utils/blockchain";
 
-// Define Market component
 const Market = () => {
   const { toast } = useToast();
   const [betAmount, setBetAmount] = useState<number>(0.01);
@@ -41,7 +39,6 @@ const Market = () => {
     title: "Will Shanghai to San Francisco shipping price in August 2025 exceed 130% of May 2025?",
     description: "This market will resolve YES if the average container shipping price from Shanghai to San Francisco in August 2025 exceeds 130% of the average price in May 2025.",
     resolves: "September 1, 2025",
-    // Use market stats if available, otherwise use default values
     yesPrice: marketStats ? marketStats.yesPercentage / 100 : 0.68,
     noPrice: marketStats ? marketStats.noPercentage / 100 : 0.32,
     volume: marketStats ? 
@@ -88,7 +85,7 @@ const Market = () => {
     
     try {
       setIsSubmitting(true);
-      const success = await makePrediction(betSide, betAmount);
+      const success = await makePrediction(betSide);
       
       if (success) {
         toast({
