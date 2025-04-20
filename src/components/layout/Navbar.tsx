@@ -26,12 +26,6 @@ const Navbar = () => {
           <Link to="/market" className="text-sm font-medium hover:text-primary">
             Market
           </Link>
-          <Link to="/dashboard" className="text-sm font-medium hover:text-primary">
-            Dashboard
-          </Link>
-          <Link to="/about" className="text-sm font-medium hover:text-primary">
-            About
-          </Link>
         </nav>
         
         <div className="hidden md:flex items-center gap-4">
@@ -62,20 +56,6 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               Market
-            </Link>
-            <Link 
-              to="/dashboard" 
-              className="text-sm font-medium hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-sm font-medium hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              About
             </Link>
             <Button variant="outline" size="sm" className="w-full">Connect Wallet</Button>
           </nav>
